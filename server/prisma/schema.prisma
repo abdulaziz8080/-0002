@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// مكتب محاسبة / معقّب — حساب واحد لكل مكتب، وله جلسة واتساب خاصة
+model Office {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  /// أرقام الواتساب التي تصلها تنبيهات المكتب (مفصولة بفاصلة)، بصيغة دولية 9665XXXXXXXX
+  alertPhones  String   @default("")
+  /// إرسال نسخة من التنبيه لجوال مسؤول المنشأة (إن وُجد)
+  notifyOrgContacts Boolean @default(false)
+  timezone     String   @default("Asia/Riyadh")
+  logoDataUrl  String?
+  createdAt    DateTime @default(now())
+
+  orgs      Org[]
+  reminders ReminderLog[]
+  waSession WhatsappSession?
+}
+
+/// منشأة يديرها المكتب
+model Org {
+  id           String   @id @default(cuid())
+  officeId     String
+  office       Office   @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  name         String
+  crNumber     String   @default("")
+  city         String   @default("")
+  contactName  String   @default("")
+  contactPhone String   @default("")
+  createdAt    DateTime @default(now())
+
+  items Item[]
+
+  @@index([officeId])
+}
+
+/// التزام نظامي لمنشأة
+model Item {
+  id            String   @id @default(cuid())
+  orgId         String
+  org           Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  templateId    String
+  name          String
+  authority     String
+  category      String
+  /// YYYY-MM-DD
+  dueDate       String
+  leadDays      Int
+  cycleDays     Int
+  estimatedCost Int      @default(0)
+  note          String   @default("")
+  done          Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  renewals  Renewal[]
+  reminders ReminderLog[]
+
+  @@index([orgId])
+}
+
+model Renewal {
+  id          String   @id @default(cuid())
+  itemId      String
+  item        Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  previousDue String
+  newDue      String
+  createdAt   DateTime @default(now())
+
+  @@index([itemId])
+}
+
+/// حالة جلسة واتساب المكتب (بيانات الاعتماد نفسها تُحفظ على القرص)
+model WhatsappSession {
+  officeId    String   @id
+  office      Office   @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  status      String   @default("disconnected")
+  phone       String?
+  connectedAt DateTime?
+  updatedAt   DateTime @updatedAt
+}
+
+/// سجل التذكيرات المرسلة — يمنع تكرار نفس التذكير لنفس البند
+model ReminderLog {
+  id        String   @id @default(cuid())
+  officeId  String
+  office    Office   @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  itemId    String?
+  item      Item?    @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  /// مثل: lead | d30 | d14 | d7 | d0 | overdue:2026-09-08
+  milestone String
+  to        String
+  message   String
+  status    String   @default("sent")
+  error     String?
+  sentAt    DateTime @default(now())
+
+  @@unique([itemId, milestone, to])
+  @@index([officeId, sentAt])
+}
