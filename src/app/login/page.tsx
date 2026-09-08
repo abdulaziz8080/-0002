@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showPw, setShowPw] = useState(false);
 
   useEffect(() => {
     if (getToken()) router.replace("/dashboard");
@@ -92,15 +93,25 @@ export default function LoginPage() {
             />
           </Field>
           <Field label="كلمة المرور">
-            <input
-              className="input"
-              type="password"
-              dir="ltr"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              minLength={6}
-              required
-            />
+            <div className="relative">
+              <input
+                className="input w-full pe-20"
+                type={showPw ? "text" : "password"}
+                dir="ltr"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                minLength={6}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw((v) => !v)}
+                className="absolute end-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-xs text-[var(--muted)] hover:text-[var(--brand)]"
+                aria-label={showPw ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+              >
+                {showPw ? "إخفاء" : "إظهار"}
+              </button>
+            </div>
           </Field>
           {mode === "register" && (
             <Field label="رقم واتساب المكتب لاستقبال التنبيهات (اختياري)">

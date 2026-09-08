@@ -4,6 +4,8 @@ import { requireAuth } from "../lib/auth.js";
 import { addDaysISO, todayISO } from "../lib/dates.js";
 import { prisma } from "../lib/db.js";
 import { OBLIGATION_TEMPLATES } from "../lib/obligations.js";
+import { buildOrgMessage, milestoneFor, orgPhones } from "../lib/reminders.js";
+import * as wa from "../lib/whatsapp.js";
 
 export const orgsRouter = Router();
 orgsRouter.use(requireAuth);
@@ -25,6 +27,8 @@ const orgSchema = z.object({
   city: z.string().optional().default(""),
   contactName: z.string().optional().default(""),
   contactPhone: z.string().optional().default(""),
+  alertPhones: z.string().optional().default(""),
+  notifyEnabled: z.boolean().optional().default(true),
 });
 
 orgsRouter.post("/", async (req, res) => {
@@ -51,6 +55,70 @@ orgsRouter.delete("/:orgId", async (req, res) => {
   if (!owned) return res.status(404).json({ error: "المنشأة غير موجودة" });
   await prisma.org.delete({ where: { id: owned.id } });
   res.json({ ok: true });
+});
+
+async function ownedOrg(orgId: string, officeId: string) {
+  return prisma.org.findFirst({ where: { id: orgId, officeId }, include: { items: true } });
+}
+
+/** معاينة رسالة اليوم الخاصة بالمنشأة والأرقام التي ستستقبلها */
+orgsRouter.get("/:orgId/whatsapp/preview", async (req, res) => {
+  const org = await ownedOrg(req.params.orgId, req.officeId);
+  if (!org) return res.status(404).json({ error: "المنشأة غير موجودة" });
+  const office = await prisma.office.findUniqueOrThrow({ where: { id: req.officeId } });
+  const today = todayISO(office.timezone);
+  const due = org.items.filter((i) => milestoneFor(i, today));
+  res.json({
+    today,
+    dueCount: due.length,
+    recipients: orgPhones(office, org),
+    message: due.length ? buildOrgMessage(office, org, due, today) : null,
+  });
+});
+
+/** إرسال تذكير المنشأة الآن إلى أرقامها (خارج جدول Cron، بدون قيد التكرار) */
+orgsRouter.post("/:orgId/whatsapp/send", async (req, res) => {
+  const org = await ownedOrg(req.params.orgId, req.officeId);
+  if (!org) return res.status(404).json({ error: "المنشأة غير موجودة" });
+  const office = await prisma.office.findUniqueOrThrow({ where: { id: req.officeId } });
+  if (!wa.isConnected(office.id)) return res.status(409).json({ error: "واتساب المكتب غير متصل" });
+  const today = todayISO(office.timezone);
+  const due = org.items.filter((i) => milestoneFor(i, today));
+  if (due.length === 0) return res.json({ sent: 0, recipients: [], message: "لا توجد التزامات تستحق التنبيه اليوم" });
+  const recipients = orgPhones(office, org);
+  if (recipients.length === 0) return res.status(400).json({ error: "لا توجد أرقام واتساب مسجّلة للمنشأة" });
+  const message = buildOrgMessage(office, org, due, today);
+  let sent = 0;
+  const errors: string[] = [];
+  for (const to of recipients) {
+    const milestone = `manual:${Date.now()}`;
+    try {
+      await wa.sendText(office.id, to, message);
+      sent += 1;
+      await prisma.reminderLog.create({
+        data: { officeId: office.id, itemId: due[0].id, milestone, to, message, status: "sent" },
+      });
+    } catch (e) {
+      const err = e instanceof Error ? e.message : String(e);
+      errors.push(`${to}: ${err}`);
+      await prisma.reminderLog.create({
+        data: { officeId: office.id, itemId: due[0].id, milestone, to, message, status: "failed", error: err },
+      });
+    }
+  }
+  res.json({ sent, recipients, errors });
+});
+
+orgsRouter.get("/:orgId/whatsapp/log", async (req, res) => {
+  const org = await ownedOrg(req.params.orgId, req.officeId);
+  if (!org) return res.status(404).json({ error: "المنشأة غير موجودة" });
+  const logs = await prisma.reminderLog.findMany({
+    where: { officeId: req.officeId, item: { orgId: org.id } },
+    orderBy: { sentAt: "desc" },
+    take: 100,
+    include: { item: { select: { name: true, org: { select: { name: true } } } } },
+  });
+  res.json({ logs });
 });
 
 const itemSchema = z.object({

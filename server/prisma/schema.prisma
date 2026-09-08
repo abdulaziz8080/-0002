@@ -36,6 +36,8 @@ model Org {
   city         String   @default("")
   contactName  String   @default("")
   contactPhone String   @default("")
+  alertPhones  String   @default("")
+  notifyEnabled Boolean @default(true)
   createdAt    DateTime @default(now())
 
   items Item[]

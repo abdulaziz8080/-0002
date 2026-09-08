@@ -47,6 +47,8 @@ type OrgInput = {
   city?: string;
   contactName?: string;
   contactPhone?: string;
+  alertPhones?: string;
+  notifyEnabled?: boolean;
 };
 
 export function useOrgs() {

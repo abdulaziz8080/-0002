@@ -68,6 +68,14 @@ export function buildOrgMessage(office: Office, org: Org, items: Item[], today: 
   return lines.join("\n");
 }
 
+/** أرقام المنشأة التي تستقبل تذكيراتها: أرقامها المسجّلة + رقم المسؤول إن فعّل المكتب ذلك */
+export function orgPhones(office: Office, org: Org): string[] {
+  if (!org.notifyEnabled) return [];
+  const raw = org.alertPhones.split(",");
+  if (office.notifyOrgContacts) raw.push(org.contactPhone);
+  return [...new Set(raw.map((p) => normalizePhone(p)).filter((p): p is string => !!p))];
+}
+
 export type RunResult = {
   officeId: string;
   officeName: string;
@@ -126,10 +134,6 @@ export async function runForOffice(office: Office, opts: { dryRun?: boolean } = 
     .map((p) => normalizePhone(p))
     .filter((p): p is string => !!p);
 
-  if (phones.length === 0) {
-    result.skipped = "لا يوجد رقم تنبيه للمكتب";
-    return result;
-  }
   if (!isConnected(office.id)) {
     result.skipped = "واتساب المكتب غير متصل";
     return result;
@@ -158,18 +162,16 @@ export async function runForOffice(office: Office, opts: { dryRun?: boolean } = 
     }
   }
 
-  // نسخة لمسؤول كل منشأة (اختياري)
-  if (office.notifyOrgContacts) {
-    const byOrg = new Map<string, typeof due>();
-    for (const d of due) {
-      const list = byOrg.get(d.item.orgId) ?? [];
-      list.push(d);
-      byOrg.set(d.item.orgId, list);
-    }
-    for (const [, list] of byOrg) {
-      const org = list[0].item.org;
-      const to = normalizePhone(org.contactPhone);
-      if (!to) continue;
+  // رسائل خاصة بكل منشأة إلى أرقامها المسجّلة
+  const byOrg = new Map<string, typeof due>();
+  for (const d of due) {
+    const list = byOrg.get(d.item.orgId) ?? [];
+    list.push(d);
+    byOrg.set(d.item.orgId, list);
+  }
+  for (const [, list] of byOrg) {
+    const org = list[0].item.org;
+    for (const to of orgPhones(office, org)) {
       const fresh: typeof due = [];
       for (const d of list) {
         if (!(await alreadyLogged(d.item.id, d.milestone, to))) fresh.push(d);

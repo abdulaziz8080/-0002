@@ -78,6 +78,8 @@ export type Org = {
   city: string;
   contactName: string;
   contactPhone: string;
+  alertPhones: string;
+  notifyEnabled: boolean;
   items: Item[];
 };
 

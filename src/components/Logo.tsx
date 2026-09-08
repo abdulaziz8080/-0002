@@ -32,7 +32,13 @@ export function LogoMark({ size = 36 }: { size?: number }) {
   );
 }
 
-export function Logo({ href = "/", size = 36 }: { href?: string; size?: number }) {
+export function Logo({
+  href = "/",
+  size = 36,
+}: {
+  href?: string;
+  size?: number;
+}) {
   return (
     <Link href={href} className="flex items-center gap-2.5">
       <LogoMark size={size} />
