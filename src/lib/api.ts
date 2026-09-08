@@ -1,6 +1,6 @@
 import type { ObligationCategory } from "./obligations";
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 const TOKEN_KEY = "multazim.token";
 
