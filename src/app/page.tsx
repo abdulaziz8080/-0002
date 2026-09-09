@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo, LogoMark } from "@/components/Logo";
+import { SupportContact } from "@/components/SupportContact";
 import { OBLIGATION_TEMPLATES } from "@/lib/obligations";
 
 const PAINS = [
@@ -278,6 +279,7 @@ export default function Home() {
       </section>
 
       <footer className="border-t border-[var(--border)] px-6 py-10 text-center text-sm text-[var(--muted)]">
+        <SupportContact />
         <p>ملتزم — أداة تنظيمية لمتابعة مواعيد التزامات المنشأة.</p>
         <p className="mt-2">
           المعلومات المعروضة إرشادية ولا تُغني عن مراجعة الجهة المختصة أو المستشار النظامي.

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { api, getToken, setToken, type Office } from "@/lib/api";
+import { SupportContact } from "@/components/SupportContact";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function LoginPage() {
         body: JSON.stringify(body),
       });
       setToken(res.token);
-      router.replace("/dashboard");
+      router.replace(res.office.role === "admin" ? "/admin" : "/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "حدث خطأ");
     } finally {
@@ -130,6 +131,9 @@ export default function LoginPage() {
             {busy ? "لحظة…" : mode === "login" ? "دخول" : "إنشاء الحساب"}
           </button>
         </form>
+        <div className="mt-6 text-center text-xs text-[var(--muted)]">
+          <SupportContact intro="واجهت مشكلة في الدخول أو الاشتراك؟ تواصل مع إدارة ملتزم:" />
+        </div>
       </div>
     </main>
   );

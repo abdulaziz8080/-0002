@@ -31,7 +31,7 @@ authRouter.post("/register", async (req, res) => {
       alertPhones: alertPhone ?? "",
     },
   });
-  res.json({ token: signToken(office.id), office: publicOffice(office) });
+  res.json({ token: signToken(office.id, "office"), office: publicOffice(office) });
 });
 
 const loginSchema = z.object({ email: z.string().trim().email().max(120), password: z.string().max(128) });
@@ -43,7 +43,10 @@ authRouter.post("/login", async (req, res) => {
   if (!office || !(await bcrypt.compare(parsed.data.password, office.passwordHash))) {
     return res.status(401).json({ error: "البريد أو كلمة المرور غير صحيحة" });
   }
-  res.json({ token: signToken(office.id), office: publicOffice(office) });
+  if (office.status === "suspended") {
+    return res.status(403).json({ error: "الحساب موقوف — تواصل مع إدارة ملتزم" });
+  }
+  res.json({ token: signToken(office.id, office.role === "admin" ? "admin" : "office"), office: publicOffice(office) });
 });
 
 authRouter.get("/me", requireAuth, async (req, res) => {
@@ -99,9 +102,17 @@ export function publicOffice(o: {
   contactEmail: string;
   timezone: string;
   logoDataUrl: string | null;
+  role: string;
+  plan: string;
+  status: string;
+  planExpiresAt: Date | null;
   createdAt: Date;
 }) {
   return {
+    role: o.role,
+    plan: o.plan,
+    status: o.status,
+    planExpiresAt: o.planExpiresAt,
     id: o.id,
     name: o.name,
     email: o.email,

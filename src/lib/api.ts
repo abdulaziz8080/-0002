@@ -53,6 +53,42 @@ export type Office = {
   contactEmail: string;
   timezone: string;
   logoDataUrl: string | null;
+  role: "office" | "admin";
+  plan: "trial" | "basic" | "pro";
+  status: "active" | "suspended";
+  planExpiresAt: string | null;
+  createdAt: string;
+};
+
+export const PLAN_LABEL: Record<Office["plan"], string> = { trial: "تجريبي", basic: "أساسي", pro: "احترافي" };
+
+export type SiteContact = {
+  supportPhone: string;
+  supportWhatsapp: string;
+  supportEmail: string;
+  supportHours: string;
+  announcement: string;
+};
+
+export type Ticket = {
+  id: string;
+  type: "issue" | "billing" | "question";
+  subject: string;
+  body: string;
+  status: "open" | "answered" | "closed";
+  reply: string;
+  createdAt: string;
+  updatedAt: string;
+  office?: { id: string; name: string; email: string; contactPhone: string };
+};
+
+export const TICKET_TYPE: Record<Ticket["type"], string> = { issue: "خلل فني", billing: "اشتراك وفواتير", question: "استفسار" };
+export const TICKET_STATUS: Record<Ticket["status"], string> = { open: "مفتوح", answered: "تم الرد", closed: "مغلق" };
+
+export type AdminOffice = Office & {
+  adminNote: string;
+  waSession: { status: string; phone: string | null; connectedAt: string | null } | null;
+  _count: { orgs: number; tickets: number };
 };
 
 export type Renewal = { id: string; previousDue: string; newDue: string; createdAt: string };

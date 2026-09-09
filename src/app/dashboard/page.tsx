@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Logo } from "@/components/Logo";
@@ -8,7 +9,8 @@ import { OverviewView } from "@/components/views/OverviewView";
 import { OrgsView } from "@/components/views/OrgsView";
 import { ReportsView } from "@/components/views/ReportsView";
 import { SettingsView } from "@/components/views/SettingsView";
-import { api, getToken, setToken, type Office } from "@/lib/api";
+import { SupportView } from "@/components/views/SupportView";
+import { api, getToken, setToken, PLAN_LABEL, type Office } from "@/lib/api";
 import { useOrgs } from "@/lib/store";
 
 const TABS = [
@@ -17,6 +19,7 @@ const TABS = [
   ["alerts", "التنبيهات"],
   ["reports", "التقارير"],
   ["settings", "الإعدادات"],
+  ["support", "الدعم"],
 ] as const;
 
 type Tab = (typeof TABS)[number][0];
@@ -64,7 +67,12 @@ export default function Dashboard() {
       <header className="no-print sticky top-0 z-20 border-b border-[var(--border)] bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-5 py-3">
           <Logo href="/dashboard" />
-          <span className="hidden text-sm text-[var(--muted)] sm:inline">{office.name}</span>
+          <span className="hidden text-sm text-[var(--muted)] sm:inline">
+            {office.name}
+            <span className="ms-2 rounded-full bg-[var(--brand-soft)] px-2 py-0.5 text-[11px] text-[var(--brand-strong)]">
+              باقة {PLAN_LABEL[office.plan]}
+            </span>
+          </span>
           <nav className="ms-auto flex flex-wrap gap-1">
             {TABS.map(([k, label]) => (
               <button
@@ -76,6 +84,11 @@ export default function Dashboard() {
               </button>
             ))}
           </nav>
+          {office.role === "admin" && (
+            <Link href="/admin" className="rounded-full border border-[var(--brand)] px-3 py-1 text-xs font-semibold text-[var(--brand)]">
+              لوحة الإدارة
+            </Link>
+          )}
           <button onClick={logout} className="text-sm text-[var(--muted)] hover:text-[var(--danger)]">
             خروج
           </button>
@@ -109,6 +122,7 @@ export default function Dashboard() {
             {tab === "settings" && (
               <SettingsView office={office} onOfficeChange={setOffice} orgs={data.orgs} onSaveOrg={(id, input) => data.updateOrg(id, input)} onLogout={logout} />
             )}
+            {tab === "support" && <SupportView office={office} />}
           </>
         )}
       </div>

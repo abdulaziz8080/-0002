@@ -21,11 +21,49 @@ model Office {
   contactEmail String   @default("")
   timezone     String   @default("Asia/Riyadh")
   logoDataUrl  String?
+  /// office | admin — مدير الموقع يدخل من نفس الصفحة ويُحوَّل للوحة الإدارة
+  role         String   @default("office")
+  /// trial | basic | pro
+  plan         String   @default("trial")
+  /// active | suspended
+  status       String   @default("active")
+  planExpiresAt DateTime?
+  adminNote    String   @default("")
   createdAt    DateTime @default(now())
 
   orgs      Org[]
   reminders ReminderLog[]
   waSession WhatsappSession?
+  tickets   SupportTicket[]
+}
+
+/// بلاغ/طلب دعم من مكتب إلى إدارة الموقع
+model SupportTicket {
+  id        String   @id @default(cuid())
+  officeId  String
+  office    Office   @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  /// issue | billing | question
+  type      String   @default("issue")
+  subject   String
+  body      String
+  /// open | answered | closed
+  status    String   @default("open")
+  reply     String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([officeId])
+  @@index([status])
+}
+
+/// إعدادات عامة للموقع يحرّرها المدير (أرقام خدمة العملاء…)
+model SiteSettings {
+  id            Int    @id @default(1)
+  supportPhone  String @default("")
+  supportWhatsapp String @default("")
+  supportEmail  String @default("")
+  supportHours  String @default("")
+  announcement  String @default("")
 }
 
 /// منشأة يديرها المكتب

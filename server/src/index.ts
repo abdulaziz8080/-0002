@@ -6,8 +6,11 @@ import cron from "node-cron";
 import { env } from "./lib/env.js";
 import { runAll } from "./lib/reminders.js";
 import { restoreAll } from "./lib/whatsapp.js";
+import { ensureAdmin } from "./lib/admin.js";
+import { adminRouter } from "./routes/admin.js";
 import { authRouter } from "./routes/auth.js";
 import { orgsRouter } from "./routes/orgs.js";
+import { supportRouter } from "./routes/support.js";
 import { whatsappRouter } from "./routes/whatsapp.js";
 
 const app = express();
@@ -28,6 +31,8 @@ app.get("/api/health", (_req, res) => res.json({ ok: true, time: new Date().toIS
 app.use("/api/auth", authRouter);
 app.use("/api/orgs", orgsRouter);
 app.use("/api/whatsapp", whatsappRouter);
+app.use("/api/support", supportRouter);
+app.use("/api/admin", adminRouter);
 
 app.use((_req, res) => res.status(404).json({ error: "غير موجود" }));
 
@@ -44,6 +49,7 @@ app.use((err: unknown, _req: express.Request, res: express.Response, _next: expr
 
 app.listen(env.port, async () => {
   console.log(`multazim server on :${env.port}`);
+  await ensureAdmin();
   await restoreAll();
 
   cron.schedule(

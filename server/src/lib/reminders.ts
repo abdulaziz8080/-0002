@@ -198,7 +198,7 @@ export async function runForOffice(office: Office, opts: { dryRun?: boolean } = 
 }
 
 export async function runAll(opts: { dryRun?: boolean } = {}) {
-  const offices = await prisma.office.findMany();
+  const offices = await prisma.office.findMany({ where: { role: "office", status: "active" } });
   const results: RunResult[] = [];
   for (const office of offices) {
     try {

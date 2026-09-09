@@ -1,5 +1,11 @@
 import path from "node:path";
 
+try {
+  process.loadEnvFile(path.resolve(".env"));
+} catch {
+  // لا يوجد .env — نعتمد على متغيرات البيئة
+}
+
 const isProd = process.env.NODE_ENV === "production";
 
 function req(name: string, fallback?: string): string {
@@ -27,4 +33,6 @@ export const env = {
   waAuthDir: path.resolve(process.env.WA_AUTH_DIR ?? "./data/wa"),
   corsOrigin: (process.env.CORS_ORIGIN ?? "http://localhost:3000").split(",").map((s) => s.trim()),
   trustProxy: process.env.TRUST_PROXY === "1",
+  adminEmail: process.env.ADMIN_EMAIL?.trim() || undefined,
+  adminPassword: process.env.ADMIN_PASSWORD,
 };
