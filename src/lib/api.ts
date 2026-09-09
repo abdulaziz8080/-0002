@@ -49,6 +49,8 @@ export type Office = {
   email: string;
   alertPhones: string;
   notifyOrgContacts: boolean;
+  contactPhone: string;
+  contactEmail: string;
   timezone: string;
   logoDataUrl: string | null;
 };
@@ -66,6 +68,7 @@ export type Item = {
   leadDays: number;
   cycleDays: number;
   estimatedCost: number;
+  reference: string;
   note: string;
   done: boolean;
   renewals: Renewal[];
@@ -78,6 +81,7 @@ export type Org = {
   city: string;
   contactName: string;
   contactPhone: string;
+  contactEmail: string;
   alertPhones: string;
   notifyEnabled: boolean;
   items: Item[];

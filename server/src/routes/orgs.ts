@@ -27,6 +27,7 @@ const orgSchema = z.object({
   city: z.string().optional().default(""),
   contactName: z.string().optional().default(""),
   contactPhone: z.string().optional().default(""),
+  contactEmail: z.string().optional().default(""),
   alertPhones: z.string().optional().default(""),
   notifyEnabled: z.boolean().optional().default(true),
 });
@@ -125,6 +126,7 @@ const itemSchema = z.object({
   templateId: z.string(),
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "تاريخ غير صالح"),
   note: z.string().optional().default(""),
+  reference: z.string().optional().default(""),
   estimatedCost: z.number().int().nonnegative().optional(),
   leadDays: z.number().int().positive().optional(),
 });
@@ -147,6 +149,7 @@ orgsRouter.post("/:orgId/items", async (req, res) => {
       leadDays: parsed.data.leadDays ?? t.leadDays,
       cycleDays: t.cycleDays,
       estimatedCost: parsed.data.estimatedCost ?? t.estimatedCost,
+      reference: parsed.data.reference,
       note: parsed.data.note,
     },
     include: { renewals: true },
@@ -162,9 +165,11 @@ orgsRouter.patch("/:orgId/items/:itemId", async (req, res) => {
   const schema = z.object({
     dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     note: z.string().optional(),
+    reference: z.string().optional(),
     done: z.boolean().optional(),
     estimatedCost: z.number().int().nonnegative().optional(),
     leadDays: z.number().int().positive().optional(),
+    cycleDays: z.number().int().positive().optional(),
   });
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });

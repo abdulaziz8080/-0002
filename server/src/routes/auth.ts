@@ -52,6 +52,8 @@ const settingsSchema = z.object({
   name: z.string().min(2).optional(),
   alertPhones: z.string().optional(),
   notifyOrgContacts: z.boolean().optional(),
+  contactPhone: z.string().optional(),
+  contactEmail: z.string().optional(),
   logoDataUrl: z.string().nullable().optional(),
 });
 
@@ -71,6 +73,8 @@ export function publicOffice(o: {
   email: string;
   alertPhones: string;
   notifyOrgContacts: boolean;
+  contactPhone: string;
+  contactEmail: string;
   timezone: string;
   logoDataUrl: string | null;
   createdAt: Date;
@@ -81,6 +85,8 @@ export function publicOffice(o: {
     email: o.email,
     alertPhones: o.alertPhones,
     notifyOrgContacts: o.notifyOrgContacts,
+    contactPhone: o.contactPhone,
+    contactEmail: o.contactEmail,
     timezone: o.timezone,
     logoDataUrl: o.logoDataUrl,
     createdAt: o.createdAt,

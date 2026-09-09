@@ -17,6 +17,8 @@ model Office {
   alertPhones  String   @default("")
   /// إرسال نسخة من التنبيه لجوال مسؤول المنشأة (إن وُجد)
   notifyOrgContacts Boolean @default(false)
+  contactPhone String   @default("")
+  contactEmail String   @default("")
   timezone     String   @default("Asia/Riyadh")
   logoDataUrl  String?
   createdAt    DateTime @default(now())
@@ -36,6 +38,7 @@ model Org {
   city         String   @default("")
   contactName  String   @default("")
   contactPhone String   @default("")
+  contactEmail String   @default("")
   alertPhones  String   @default("")
   notifyEnabled Boolean @default(true)
   createdAt    DateTime @default(now())
@@ -59,6 +62,7 @@ model Item {
   leadDays      Int
   cycleDays     Int
   estimatedCost Int      @default(0)
+  reference     String   @default("")
   note          String   @default("")
   done          Boolean  @default(false)
   createdAt     DateTime @default(now())
