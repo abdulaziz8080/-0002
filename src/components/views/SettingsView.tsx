@@ -22,6 +22,19 @@ export function SettingsView({
   const [f, setF] = useState({ name: office.name, contactPhone: office.contactPhone, contactEmail: office.contactEmail });
   const [msg, setMsg] = useState<{ tone: "ok" | "err"; text: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [pw, setPw] = useState({ current: "", next: "", confirm: "" });
+
+  async function changePassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (pw.next !== pw.confirm) return setMsg({ tone: "err", text: "تأكيد كلمة المرور غير مطابق." });
+    try {
+      await api("/auth/password", { method: "POST", body: JSON.stringify({ current: pw.current, next: pw.next }) });
+      setPw({ current: "", next: "", confirm: "" });
+      setMsg({ tone: "ok", text: "تم تغيير كلمة المرور." });
+    } catch (e) {
+      setMsg({ tone: "err", text: e instanceof Error ? e.message : "حدث خطأ" });
+    }
+  }
 
   async function patch(data: Partial<Pick<Office, "name" | "contactPhone" | "contactEmail" | "logoDataUrl">>, okText: string) {
     try {
@@ -115,6 +128,25 @@ export function SettingsView({
         <p className="mt-3 text-xs text-[var(--muted)]">
           بريد الدخول: <span dir="ltr">{office.email}</span>
         </p>
+      </form>
+
+      <form className="card p-6" onSubmit={changePassword}>
+        <h2 className="text-lg font-semibold">كلمة المرور</h2>
+        <p className="mt-1 text-sm text-[var(--muted)]">٨ أحرف على الأقل. بعد التغيير تبقى جلستك الحالية مفتوحة.</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <Field label="الحالية">
+            <input className="input" type="password" autoComplete="current-password" value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} required />
+          </Field>
+          <Field label="الجديدة">
+            <input className="input" type="password" autoComplete="new-password" minLength={8} value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} required />
+          </Field>
+          <Field label="تأكيد الجديدة">
+            <input className="input" type="password" autoComplete="new-password" minLength={8} value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} required />
+          </Field>
+        </div>
+        <div className="mt-4 flex">
+          <button className="btn btn-outline ms-auto">تغيير كلمة المرور</button>
+        </div>
       </form>
 
       <section className="card p-6">

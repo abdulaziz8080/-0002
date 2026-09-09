@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Logo } from "@/components/Logo";
+import { Logo, LogoMark } from "@/components/Logo";
 import { OBLIGATION_TEMPLATES } from "@/lib/obligations";
 
 const PAINS = [
@@ -79,12 +79,22 @@ const PLANS = [
   },
 ];
 
+const STEPS = [
+  { n: "١", title: "سجّل مكتبك", body: "حساب واحد للمكتب، تسجيل في أقل من دقيقة، بدون بطاقة ولا ربط حكومي." },
+  { n: "٢", title: "أضف منشآت عملائك والتزاماتها", body: "اختر الالتزام من القائمة الجاهزة وحدد تاريخ الاستحقاق — يحسب ملتزم دورة التجديد ومهلة التنبيه تلقائياً." },
+  { n: "٣", title: "اربط واتساب المكتب", body: "امسح رمز QR مرة واحدة، وحدد لكل منشأة الأرقام التي تصلها تذكيراتها." },
+  { n: "٤", title: "استلم التذكير قبل الموعد", body: "كل صباح يفحص ملتزم الالتزامات ويرسل تذكيراً من رقم مكتبك قبل الاستحقاق بـ ٣٠ و١٤ و٧ أيام ويوم الاستحقاق — دون أن تفتح الموقع." },
+];
+
 export default function Home() {
   return (
     <main className="min-h-screen glow">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <Logo />
         <nav className="hidden items-center gap-7 text-sm text-[var(--muted)] md:flex">
+          <a href="#about" className="hover:text-[var(--foreground)]">
+            من نحن
+          </a>
           <a href="#problem" className="hover:text-[var(--foreground)]">
             المشكلة
           </a>
@@ -108,7 +118,7 @@ export default function Home() {
 
       <section className="mx-auto max-w-6xl px-6 pt-12 pb-20 text-center">
         <span className="inline-block rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-1.5 text-xs text-[var(--muted)]">
-          مبني للمنشآت الصغيرة والمتوسطة في السعودية
+          مبني لمكاتب المحاسبة والتعقيب في السعودية
         </span>
         <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-bold leading-[1.25] md:text-6xl md:leading-[1.2]">
           لا تدفع غرامة تأخير
@@ -136,6 +146,38 @@ export default function Home() {
         <p className="mt-4 text-sm text-[var(--muted)]">
           بدون بطاقة ائتمانية · بدون ربط بحسابك الحكومي
         </p>
+      </section>
+
+      <section id="about" className="mx-auto max-w-6xl px-6 pb-20">
+        <div className="card grid gap-8 p-8 md:grid-cols-[auto_1fr] md:p-10">
+          <LogoMark size={96} />
+          <div>
+            <h2 className="text-3xl font-bold">من نحن؟</h2>
+            <p className="mt-4 text-lg leading-8 text-[var(--muted)]">
+              <b className="text-[var(--foreground)]">ملتزم</b> منصة سعودية لمتابعة الالتزامات النظامية، صُمّمت لمكاتب
+              المحاسبة والتعقيب ومكاتب الخدمات التي تدير ملفات عدة منشآت. نجمع كل تجديد ورخصة
+              وإقرار لكل عميل في لوحة واحدة، ونرسل التذكير تلقائياً من رقم واتساب مكتبك قبل
+              الاستحقاق بوقت كافٍ — فلا يضيع موعد، ولا يدفع عميلك غرامة كان يمكن تجنّبها.
+            </p>
+            <p className="mt-3 leading-8 text-[var(--muted)]">
+              رسالتنا بسيطة: أن يقضي المكتب وقته في خدمة عملائه لا في تتبّع التواريخ. ملتزم
+              أداة تنظيمية مستقلة، لا نطلب صلاحيات على حساباتك الحكومية، وبياناتك ملكك تصدّرها
+              في أي وقت.
+            </p>
+          </div>
+        </div>
+        <h3 className="mt-14 text-center text-2xl font-bold">كيف يعمل ملتزم؟</h3>
+        <div className="mt-8 grid gap-5 md:grid-cols-4">
+          {STEPS.map((s) => (
+            <div key={s.n} className="card p-6">
+              <div className="grid h-10 w-10 place-items-center rounded-full bg-[var(--brand)] text-lg font-bold text-[var(--on-brand)]">
+                {s.n}
+              </div>
+              <h4 className="mt-4 font-semibold">{s.title}</h4>
+              <p className="mt-2 text-sm leading-7 text-[var(--muted)]">{s.body}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section id="problem" className="mx-auto max-w-6xl px-6 pb-20">

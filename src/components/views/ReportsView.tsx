@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { Office, Org } from "@/lib/api";
 import { csvCell, daysUntil, downloadFile, flatten, fmtDate, fmtDays, fmtMoney, fmtNum, statusOf, summarize, todayISO, STATUS_STYLE } from "@/lib/status";
 import { Field } from "@/components/ui";
+import { LogoMark } from "@/components/Logo";
 
 export function ReportsView({ orgs, office }: { orgs: Org[]; office: Office }) {
   const [scope, setScope] = useState("all");
@@ -79,7 +80,7 @@ export function ReportsView({ orgs, office }: { orgs: Org[]; office: Office }) {
               // eslint-disable-next-line @next/next/no-img-element
               <img src={office.logoDataUrl} alt="" className="h-14 w-14 rounded-[10px] object-contain" />
             ) : (
-              <div className="grid h-14 w-14 place-items-center rounded-[10px] bg-[var(--brand)] text-lg font-bold text-white">{office.name.trim().charAt(0) || "م"}</div>
+              <LogoMark size={56} />
             )}
             <div>
               <div className="text-lg font-bold leading-tight">{office.name}</div>
@@ -93,7 +94,9 @@ export function ReportsView({ orgs, office }: { orgs: Org[]; office: Office }) {
           <div className="text-end">
             <div className="text-base font-bold">{scope === "all" ? "تقرير الالتزامات النظامية — كل المنشآت" : "تقرير الالتزامات النظامية"}</div>
             {scope !== "all" && <div className="mt-0.5 text-sm">{scoped[0]?.name}</div>}
-            <div className="mt-1 text-xs text-[var(--muted)]">صدر في {fmtDate(todayISO())}</div>
+            <div className="mt-1 flex items-center justify-end gap-1.5 text-xs text-[var(--muted)]">
+              صدر في {fmtDate(todayISO())} · عبر منصة ملتزم <LogoMark size={16} />
+            </div>
           </div>
         </header>
 

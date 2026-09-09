@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LogoMark } from "@/components/Logo";
+import Image from "next/image";
 import { api, getToken, setToken, type Office } from "@/lib/api";
 
 export default function LoginPage() {
@@ -44,8 +44,7 @@ export default function LoginPage() {
     <main className="glow grid min-h-screen place-items-center px-6 py-12">
       <div className="card w-full max-w-md p-8">
         <div className="flex flex-col items-center gap-3 text-center">
-          <LogoMark size={64} />
-          <h1 className="text-2xl font-bold">ملتزم</h1>
+          <Image src="/logo.png" alt="ملتزم" width={126} height={100} priority />
           <p className="text-sm text-[var(--muted)]">
             {mode === "login" ? "سجّل دخول مكتبك للوحة التحكم" : "أنشئ حساب مكتبك — مجاناً"}
           </p>
@@ -100,7 +99,7 @@ export default function LoginPage() {
                 dir="ltr"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                minLength={6}
+                minLength={8}
                 required
               />
               <button

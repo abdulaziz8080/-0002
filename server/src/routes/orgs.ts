@@ -21,14 +21,20 @@ orgsRouter.get("/", async (req, res) => {
   res.json({ orgs });
 });
 
+const short = (max: number) => z.string().trim().max(max).optional().default("");
+const phones = z.string().trim().max(300).regex(/^[\d\s+,\-()]*$/, "الأرقام تحتوي رموزاً غير مسموحة");
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "تاريخ غير صالح").refine((d) => !Number.isNaN(Date.parse(d)), "تاريخ غير صالح");
+const days = z.number().int().positive().max(3650);
+const money = z.number().int().nonnegative().max(1_000_000_000);
+
 const orgSchema = z.object({
-  name: z.string().min(2, "اسم المنشأة قصير"),
-  crNumber: z.string().optional().default(""),
-  city: z.string().optional().default(""),
-  contactName: z.string().optional().default(""),
-  contactPhone: z.string().optional().default(""),
-  contactEmail: z.string().optional().default(""),
-  alertPhones: z.string().optional().default(""),
+  name: z.string().trim().min(2, "اسم المنشأة قصير").max(120),
+  crNumber: short(30),
+  city: short(60),
+  contactName: short(80),
+  contactPhone: phones.optional().default(""),
+  contactEmail: z.union([z.literal(""), z.string().trim().email("بريد غير صالح").max(120)]).optional().default(""),
+  alertPhones: phones.optional().default(""),
   notifyEnabled: z.boolean().optional().default(true),
 });
 
@@ -123,12 +129,12 @@ orgsRouter.get("/:orgId/whatsapp/log", async (req, res) => {
 });
 
 const itemSchema = z.object({
-  templateId: z.string(),
-  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "تاريخ غير صالح"),
-  note: z.string().optional().default(""),
-  reference: z.string().optional().default(""),
-  estimatedCost: z.number().int().nonnegative().optional(),
-  leadDays: z.number().int().positive().optional(),
+  templateId: z.string().max(40),
+  dueDate: isoDate,
+  note: short(1000),
+  reference: short(80),
+  estimatedCost: money.optional(),
+  leadDays: days.optional(),
 });
 
 orgsRouter.post("/:orgId/items", async (req, res) => {
@@ -163,13 +169,13 @@ async function ownedItem(itemId: string, officeId: string) {
 
 orgsRouter.patch("/:orgId/items/:itemId", async (req, res) => {
   const schema = z.object({
-    dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-    note: z.string().optional(),
-    reference: z.string().optional(),
+    dueDate: isoDate.optional(),
+    note: z.string().trim().max(1000).optional(),
+    reference: z.string().trim().max(80).optional(),
     done: z.boolean().optional(),
-    estimatedCost: z.number().int().nonnegative().optional(),
-    leadDays: z.number().int().positive().optional(),
-    cycleDays: z.number().int().positive().optional(),
+    estimatedCost: money.optional(),
+    leadDays: days.optional(),
+    cycleDays: days.optional(),
   });
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });

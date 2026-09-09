@@ -6,11 +6,15 @@ import { prisma } from "../lib/db.js";
 
 export const authRouter = Router();
 
+const phones = z.string().trim().max(300).regex(/^[\d\s+,\-()]*$/, "الأرقام تحتوي رموزاً غير مسموحة");
+const optionalEmail = z.union([z.literal(""), z.string().trim().email("بريد غير صالح").max(120)]);
+const password = z.string().min(8, "كلمة المرور ٨ أحرف على الأقل").max(128, "كلمة المرور طويلة جداً");
+
 const registerSchema = z.object({
-  name: z.string().min(2, "اسم المكتب قصير"),
-  email: z.string().email("بريد غير صالح"),
-  password: z.string().min(6, "كلمة المرور ٦ أحرف على الأقل"),
-  alertPhone: z.string().optional(),
+  name: z.string().trim().min(2, "اسم المكتب قصير").max(120),
+  email: z.string().trim().email("بريد غير صالح").max(120),
+  password,
+  alertPhone: phones.optional(),
 });
 
 authRouter.post("/register", async (req, res) => {
@@ -23,14 +27,14 @@ authRouter.post("/register", async (req, res) => {
     data: {
       name,
       email: email.toLowerCase(),
-      passwordHash: await bcrypt.hash(password, 10),
+      passwordHash: await bcrypt.hash(password, 12),
       alertPhones: alertPhone ?? "",
     },
   });
   res.json({ token: signToken(office.id), office: publicOffice(office) });
 });
 
-const loginSchema = z.object({ email: z.string().email(), password: z.string() });
+const loginSchema = z.object({ email: z.string().trim().email().max(120), password: z.string().max(128) });
 
 authRouter.post("/login", async (req, res) => {
   const parsed = loginSchema.safeParse(req.body);
@@ -49,22 +53,40 @@ authRouter.get("/me", requireAuth, async (req, res) => {
 });
 
 const settingsSchema = z.object({
-  name: z.string().min(2).optional(),
-  alertPhones: z.string().optional(),
+  name: z.string().trim().min(2).max(120).optional(),
+  alertPhones: phones.optional(),
   notifyOrgContacts: z.boolean().optional(),
-  contactPhone: z.string().optional(),
-  contactEmail: z.string().optional(),
-  logoDataUrl: z.string().nullable().optional(),
+  contactPhone: phones.optional(),
+  contactEmail: optionalEmail.optional(),
+  logoDataUrl: z
+    .string()
+    .max(600_000, "الشعار كبير جداً")
+    .regex(/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/, "صيغة الشعار غير مدعومة")
+    .nullable()
+    .optional(),
 });
 
 authRouter.patch("/me", requireAuth, async (req, res) => {
   const parsed = settingsSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
-  if (parsed.data.logoDataUrl && parsed.data.logoDataUrl.length > 600_000) {
-    return res.status(400).json({ error: "الشعار كبير جداً" });
-  }
   const office = await prisma.office.update({ where: { id: req.officeId }, data: parsed.data });
   res.json({ office: publicOffice(office) });
+});
+
+const passwordSchema = z.object({ current: z.string().max(128), next: password });
+
+authRouter.post("/password", requireAuth, async (req, res) => {
+  const parsed = passwordSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message });
+  const office = await prisma.office.findUniqueOrThrow({ where: { id: req.officeId } });
+  if (!(await bcrypt.compare(parsed.data.current, office.passwordHash))) {
+    return res.status(401).json({ error: "كلمة المرور الحالية غير صحيحة" });
+  }
+  await prisma.office.update({
+    where: { id: office.id },
+    data: { passwordHash: await bcrypt.hash(parsed.data.next, 12) },
+  });
+  res.json({ ok: true });
 });
 
 export function publicOffice(o: {
