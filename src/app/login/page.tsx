@@ -100,7 +100,7 @@ export default function LoginPage() {
                 dir="ltr"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                minLength={8}
+                minLength={mode === "register" ? 8 : undefined}
                 required
               />
               <button
